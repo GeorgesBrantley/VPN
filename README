@@ -20,3 +20,5 @@ Up to 5 connections can be kept
 A ---- C ----- B
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Data is not really being sent, just AKWs
+
+https://www.cs.rutgers.edu/~pxk/417/notes/sockets/udp.html
