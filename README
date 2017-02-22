@@ -1,0 +1,22 @@
+Relationship
+A: Client, knows Server B that it wishes to send and recieve data from
+B: Server, Accepts input and returns AKW
+C: VPN, has 5 concurrent threads, each 'connected' to a B. A knows which's Bs it wants to connect to
+
+
+STEPS:
+
+RUN A,B,C at once
+
+A tells C, I want to talk to this B at this port.
+C returns back a port on C 
+A talks to Port on C
+C forwards data to B
+B accepts data from C, returns AWK?
+C returns data to A
+
+Up to 5 connections can be kept
+
+A ---- C ----- B
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Data is not really being sent, just AKWs
