@@ -1,9 +1,29 @@
 //GEORGES BRANTLEY
 #include <sys/socket.h>
+#include <string.h>
+#include <sys/types.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <netdb.h>
+
 #define BUFSIZE 2048
 
 //Code gotten from cs.rutgers
 int main (int argc, char **argv) {
+    char port[50];
+    int PORT = 0;
+    if (argc <= 1) {
+        strcpy(port,"8000");
+    } else {
+        strcpy(port,*(argv+1));
+    }
+
+    try {
+        PORT = atoi(port);
+    } catch(...) {
+        PORT = 8000;
+    }
+
     struct sockaddr_in myaddr; /* our address */ 
     struct sockaddr_in remaddr; /* remote address */ 
     socklen_t addrlen = sizeof(remaddr); /* length of addresses */ 
@@ -12,7 +32,7 @@ int main (int argc, char **argv) {
     unsigned char buf[BUFSIZE]; /* receive buffer */ 
     /* create a UDP socket */ 
     if ((fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) { 
-        perror("cannot create socket\n"); 
+        printf("cannot create socket\n"); 
         return 0; 
     } 
     /* bind the socket to any valid IP address and a specific port */ 
@@ -23,7 +43,7 @@ int main (int argc, char **argv) {
     myaddr.sin_port = htons(PORT); 
     
     if (bind(fd, (struct sockaddr *)&myaddr, sizeof(myaddr)) < 0) { 
-        perror("bind failed"); 
+        printf("bind failed"); 
         return 0; 
     } 
 
