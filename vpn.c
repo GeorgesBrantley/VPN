@@ -20,21 +20,29 @@
 
 //Struct of a tunnel
 struct tunnel{
+    //info about server I want to tunnel to
     char servIP[50];
-    int servPort;
+    char servPort[50];
     
-    char myPort;
+    //info about where to listen for info
+    int myPort;
 };
 //List of tunnels
 struct tunnel tuns[N];
-//bit map of openings?
-int map[N];
+//Amount of tunnels
+int amountT;
 
+//THREADED
+//Takes the tunnel number 
+void connectionListen(int tunNum){
+    //TODO
+    //start listening on myPort
+    //relay information to servIP/Port
+    //TODO write client
 
-//LISTENS FOR NEW CONNECTIONS
+}
+//Listens for incoming stuff
 int main (int argc, char *argv[]) {
-
-
     //GET PORT
     int port = 0;
     if (argc <= 1) {
@@ -52,10 +60,8 @@ int main (int argc, char *argv[]) {
         printf("Assigned Port is %d\n",port);
     }
 
-    //CREATE BIT MAP
-    for (int x =0; x < N; ++x)
-        map[x] = 0;
-
+    //init connections
+    amountT = 0;
 
     //START LISTENING FOR INPUTS
     //CODE TAKEN from CS.rutgers
@@ -64,7 +70,7 @@ int main (int argc, char *argv[]) {
     socklen_t addrlen = sizeof(remaddr); /* length of addresses */ 
     int recvlen; /* # bytes received */ 
     int fd; /* our socket */ 
-    unsigned char buf[MAX]; /* receive buffer */ 
+    char buf[MAX]; /* receive buffer */ 
     /* create a UDP socket */ 
     if ((fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) { 
         printf("cannot create socket\n"); 
@@ -92,8 +98,44 @@ int main (int argc, char *argv[]) {
             printf("received message: \"%s\"\n", buf); 
         } 
         //PULL APART MESSAGE
-        //CONNECT MYIP MYPORT targetIP targetPort
+        //Language:MYIP MYPORT targetIP targetPort (we can ignore MY*)
+        char *targetIP;
+        char *targetPort;
+        char *w = buf;
+        int flag = 0;
+        while (*w != 0) {
+            if (*w == ' ') {
+                *w = 0;
+                flag++;
+                if (flag == 2) 
+                    targetIP = (w+1);
+                else if (flag ==3){
+                    targetPort = (w+1);
+                    break;
+                }
+            }
+            ++w;
+        }
         //Open up connection
-        //return port of connection
+        if (amountT >= N) {
+            //TODO: SEND FULL
+        } else {
+            //ADD CONNECTION
+            strcpy(tuns[amountT].servIP,targetIP);
+            strcpy(tuns[amountT].servPort,targetPort);
+            //Get port number 
+            int returnPort = 8010;
+            returnPort += amountT;
+            tuns[amountT].myPort = returnPort;
+            
+            //START LISTENING THREAD
+            pthread_t listen;
+            pthread_create(&listen,NULL, connectionListen,&amountT);
+            
+            //RETURN PORT TO USER
+            //TODO use SENDTO to report port back
+
+            ++amountT;
+        }
     } /* never exits */
 }
