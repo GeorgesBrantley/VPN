@@ -35,12 +35,64 @@ int amountT;
 //THREADED
 //Takes the tunnel number 
 void *connectionListen(void* tunNum){
-    int *tun = (int*)tunNum;
-    //TODO
+    int *tunTest = (int*)tunNum;
+    int tun = *tunTest; 
+    char IP[50];
+    char outPort[50]; 
+    int myport = tuns[tun].myPort;
+    strcpy(IP,tuns[tun].servIP);
+    strcpy(outPort,tuns[tun].servPort);
+
     //start listening on myPort
     //relay information to servIP/Port
-    //TODO write client
+    struct sockaddr_in myaddr; /* our address */ 
+    struct sockaddr_in remaddr; /* remote address */ 
+    socklen_t addrlen = sizeof(remaddr); /* length of addresses */ 
+    int recvlen; /* # bytes received */ 
+    int fd; /* our socket */ 
+    char buf[MAX]; /* receive buffer */ 
+    /* create a UDP socket */ 
+    if ((fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) { 
+        printf("cannot create socket\n"); 
+        return 0; 
+    } 
+    /* bind the socket to any valid IP address and a specific port */ 
+    
+    memset((char *)&myaddr, 0, sizeof(myaddr)); 
+    myaddr.sin_family = AF_INET; 
+    myaddr.sin_addr.s_addr = htonl(INADDR_ANY); 
+    myaddr.sin_port = htons(myport); 
+    
+    if (bind(fd, (struct sockaddr *)&myaddr, sizeof(myaddr)) < 0) { 
+        printf("bind failed"); 
+        return 0; 
+    } 
+    //CREATING SOCKET TO SERVER
+    struct hostent *hp;
+    struct sockaddr_in servaddr;
+    memset((char*)&servaddr, 0,sizeof(servaddr));
+    servaddr.sin_family = AF_INET;
+    servaddr.sin_port = htons(atoi(outPort));
 
+    //get host name ip
+    hp = gethostbyname(IP);
+    if (!hp) {
+        printf("FAILED\n");
+    }
+
+    //put host address into server address structure
+    memcpy((void*)&servaddr.sin_addr, hp->h_addr_list[0],hp->h_length);
+    //ready to send message
+    
+    //Wait for pings
+    for (;;) {
+        recvlen = recvfrom(fd, buf, MAX, 0, (struct sockaddr *)&remaddr, &addrlen); 
+        printf("Message Recived, Tunneling Message\n"); 
+        //SENDING message to HOST
+        sendto(fd,buf,MAX,0,(struct sockaddr *)&servaddr, sizeof(servaddr));
+        bzero(buf,MAX);
+
+    }
 }
 //Listens for incoming stuff
 int main (int argc, char *argv[]) {
