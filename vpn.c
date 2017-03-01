@@ -34,7 +34,8 @@ int amountT;
 
 //THREADED
 //Takes the tunnel number 
-void connectionListen(int tunNum){
+void *connectionListen(void* tunNum){
+    int *tun = (int*)tunNum;
     //TODO
     //start listening on myPort
     //relay information to servIP/Port
@@ -118,7 +119,10 @@ int main (int argc, char *argv[]) {
         }
         //Open up connection
         if (amountT >= N) {
-            //TODO: SEND FULL
+            // SEND FULL
+            char reply[50];
+            strcpy(reply, "Full on Connections\n");
+            sendto(fd,reply,50,0,(struct sockaddr *)&remaddr,addrlen);
         } else {
             //ADD CONNECTION
             strcpy(tuns[amountT].servIP,targetIP);
@@ -133,8 +137,10 @@ int main (int argc, char *argv[]) {
             pthread_create(&listen,NULL, connectionListen,&amountT);
             
             //RETURN PORT TO USER
-            //TODO use SENDTO to report port back
-
+            //use SENDTO to report port back
+            char portNumber[50];
+            sprintf(portNumber, "%d",returnPort);
+            sendto(fd,portNumber,50,0,(struct sockaddr *)&remaddr,addrlen);
             ++amountT;
         }
     } /* never exits */
