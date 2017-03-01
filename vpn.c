@@ -42,7 +42,7 @@ void *connectionListen(void* tunNum){
     int myport = tuns[tun].myPort;
     strcpy(IP,tuns[tun].servIP);
     strcpy(outPort,tuns[tun].servPort);
-
+    printf("TEST: %d\n%s\n%s\n",myport, IP,outPort);
     //start listening on myPort
     //relay information to servIP/Port
     struct sockaddr_in myaddr; /* our address */ 
@@ -77,7 +77,7 @@ void *connectionListen(void* tunNum){
     //get host name ip
     hp = gethostbyname(IP);
     if (!hp) {
-        printf("FAILED\n");
+        printf("Not Correct Host Name\n");
     }
 
     //put host address into server address structure
@@ -156,6 +156,7 @@ int main (int argc, char *argv[]) {
         char *targetPort;
         char *w = buf;
         int flag = 0;
+        //TODO NOT SAVING?
         while (*w != 0) {
             if (*w == ' ') {
                 *w = 0;
@@ -169,6 +170,7 @@ int main (int argc, char *argv[]) {
             }
             ++w;
         }
+        printf("TEST2:%s\n%s\n",targetIP,targetPort);
         //Open up connection
         if (amountT >= N) {
             // SEND FULL
