@@ -3,7 +3,7 @@ A: Client, knows Server B that it wishes to send and recieve data from
 B: Server, Accepts input and returns AKW
 C: VPN, has 5 concurrent threads, each 'connected' to a B. A knows which's Bs it wants to connect to
 
-
+TODO: I CAN"T GET THE FUCKING RESPONSE TO WORK
 STEPS:
 
 RUN A,B,C at once
