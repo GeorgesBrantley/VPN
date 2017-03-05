@@ -92,22 +92,50 @@ void *connectionListen(void* tunNum){
             i++; 
             b++;
         }
-        //SEND INFO TO IP (B)
-        printf("SENDING TO %s-%s\n",IP,outPort);
-        sendto(fd,buf,i,0,(struct sockaddr*)&servaddr, sizeof(servaddr));
-        //LISTEN FOR RESPONSE? (B)
-        bzero(buf,MAX);
-        recvfrom(fd,buf,MAX,0,(struct sockaddr*)&servaddr, &servlen); 
-        printf("RECIEVED from %s-%s:%s\n",IP,outPort,buf);
+        b=buf;
+        if (*b == '$') {
+            printf("PING PROTOCOL\n");
+            //SEND INFO TO IP (B)
+            printf("SENDING TO %s-%s\n",IP,outPort);
+            sendto(fd,buf,i,0,(struct sockaddr*)&servaddr, sizeof(servaddr));
+            //LISTEN FOR RESPONSE? (B)
+            bzero(buf,MAX);
+            recvfrom(fd,buf,MAX,0,(struct sockaddr*)&servaddr, &servlen); 
+            printf("RECIEVED from %s-%s:%s\n",IP,outPort,buf);
 
-        b = buf;
-        i = 0;
-        while (*b) {
-            i++; 
-            b++;
-        }
-        //FWD RESPONSE TO (A)
-        sendto(fd,buf,i,0,(struct sockaddr *) &remaddr, addrlen);
+            b = buf;
+            i = 0;
+            while (*b) {
+                i++; 
+                b++;
+            }
+            //FWD RESPONSE TO (A)
+            sendto(fd,buf,i,0,(struct sockaddr *) &remaddr, addrlen);
+        } else if (*b == 'L') {
+            printf("TRAFFIC PROTOCOL\n");
+            //SEND INFO TO IP (B)
+            printf("SENDING TO %s-%s\n",IP,outPort);
+            sendto(fd,buf,i,0,(struct sockaddr*)&servaddr, sizeof(servaddr));
+            //LISTEN FOR RESPONSES for X times (B)
+            for (int x = 0; x < i-1; ++x) {
+                //Get message
+                bzero(buf,MAX);
+                recvlen = recvfrom(fd,buf,MAX,0,(struct sockaddr *)&remaddr,&addrlen);
+                printf("RECIEVED at PORT %d:\n'%s'\n",myport,buf);
+                //send message 
+                printf("SENDING TO %s-%s\n",IP,outPort);
+                sendto(fd,buf,i,0,(struct sockaddr*)&servaddr, sizeof(servaddr));
+            }
+            for (int x = 0; x < 3; ++x) {
+                bzero(buf,MAX);
+                recvlen = recvfrom(fd,buf,MAX,0,(struct sockaddr *)&remaddr,&addrlen);
+                printf("RECIEVED at PORT %d:\n'%s'\n",myport,buf);
+                //send message 
+                printf("SENDING TO %s-%s\n",IP,outPort);
+                sendto(fd,buf,3,0,(struct sockaddr*)&servaddr, sizeof(servaddr));
+            } 
+            printf("TRAFFIC PROTOCOL END\n");
+        } 
     }
 }
 //Listens for incoming stuff
@@ -215,3 +243,4 @@ int main (int argc, char *argv[]) {
         }
     } /* never exits */
 }
+
