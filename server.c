@@ -6,22 +6,15 @@
 #include <stdio.h>
 #include <netdb.h>
 
-#define BUFSIZE 2048
+#define BUFSIZE 5000 
 
 //Code gotten from cs.rutgers
 int main (int argc, char **argv) {
     char port[50];
-    int PORT = 0;
     if (argc <= 1) {
         strcpy(port,"8000");
     } else {
-        strcpy(port,*(argv+1));
-    }
-
-    try {
-        PORT = atoi(port);
-    } catch(...) {
-        PORT = 8000;
+        strcpy(port,argv[1]);
     }
 
     struct sockaddr_in myaddr; /* our address */ 
@@ -40,7 +33,7 @@ int main (int argc, char **argv) {
     memset((char *)&myaddr, 0, sizeof(myaddr)); 
     myaddr.sin_family = AF_INET; 
     myaddr.sin_addr.s_addr = htonl(INADDR_ANY); 
-    myaddr.sin_port = htons(PORT); 
+    myaddr.sin_port = htons(atoi(port)); 
     
     if (bind(fd, (struct sockaddr *)&myaddr, sizeof(myaddr)) < 0) { 
         printf("bind failed"); 
@@ -49,12 +42,13 @@ int main (int argc, char **argv) {
 
     /* now loop, receiving data and printing what we received */ 
     for (;;) { 
-        printf("waiting on port %d\n", PORT); 
+        printf("waiting on port %d\n", atoi(port)); 
         recvlen = recvfrom(fd, buf, BUFSIZE, 0, (struct sockaddr *)&remaddr, &addrlen); 
         printf("received %d bytes\n", recvlen);     
         if (recvlen > 0) { 
             buf[recvlen] = 0; 
             printf("received message: \"%s\"\n", buf); 
         } 
+        sendto(fd,"HEYHEYHEY",10,0,(struct sockaddr *)&remaddr,addrlen);
     } /* never exits */
 }

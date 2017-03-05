@@ -16,7 +16,7 @@
 //GLOBALS
 //Max Connections
 #define N 5
-#define MAX 1024
+#define MAX 5000 
 
 //Struct of a tunnel
 struct tunnel{
@@ -41,70 +41,73 @@ void *connectionListen(void* tunNum){
     int myport = tuns[tun].myPort;
     strcpy(IP,tuns[tun].servIP);
     strcpy(outPort,tuns[tun].servPort);
-    printf("TEST10: %s-%s\n",IP,outPort);
-   
-    
-    //create socket
-    int fd;
-    if ((fd = socket(AF_INET,SOCK_DGRAM,0)) < 0) {
-        printf("Bind error\n");
-    }
-
-    //name socket
-    struct sockaddr_in myaddr; //us
-    struct sockaddr_in remaddr; //remote address
-    socklen_t addrlen = sizeof(remaddr); //size of remoate
-    int recvlen; //length of input
     char buf[MAX];
-    
-    //get host name
-    char host[200];
-    gethostname(host,sizeof(host));
-    struct hostent *h = gethostbyname(host);
 
-    memset((char *)&myaddr,0,sizeof(myaddr));
+    //CREATE myADDR and stuff TO TALK WITH A
+    struct sockaddr_in myaddr; //OUR ADDRESS
+    struct sockaddr_in remaddr; //REMOTE ADDRESS
+    socklen_t addrlen = sizeof(remaddr);
+    int recvlen;
+    int fd;
+    //make udp socket
+    if ((fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
+        printf("SOCKET ERROR\n");
+    }
+    //bind the socket to any valid IP and specific port
+    memset((char*)&myaddr, 0,sizeof(myaddr));
     myaddr.sin_family = AF_INET;
     myaddr.sin_addr.s_addr = htonl(INADDR_ANY);
     myaddr.sin_port = htons(myport);
-
-    if (bind(fd, (struct sockaddr*)&myaddr,sizeof(myaddr)) < 0){
-        printf("BIND ERROR\n");
+    if (bind(fd, (struct sockaddr*)&myaddr, sizeof(myaddr)) < 0) {
+        printf("BIND FAIL\n");
     }
-    
+
+    //CREATE HOSTENT and SERVADDR TO TALK WITH B
+    struct hostent *hp; //host info
+    struct sockaddr_in servaddr; //server address
+    socklen_t servlen = sizeof(servaddr);
+    //fill in server info
+    memset((char*)&servaddr,0,sizeof(servaddr));
+    servaddr.sin_family = AF_INET;
+    //servaddr.sin_port = htons(atoi(outPort));
+    servaddr.sin_port = htons(atoi(outPort));
+    //look up address of server with name
+    hp = gethostbyname(IP);
+    if(!hp){
+            printf("Could not find IP\n");
+    }
+    //put hte hosts address into the server address struct
+    memcpy((void*)&servaddr.sin_addr, hp->h_addr_list[0], hp->h_length);
+
     while(1) {
-        recvlen = recvfrom(fd, buf, MAX, 0,(struct sockaddr*) &remaddr, &addrlen);
-        printf("RECIEVED: %s\n\n",buf);
-
-        //close connection
-        close(fd);
-        //create connection to other place 
-        int out;
-        if ((out = socket(AF_INET,SOCK_DGRAM,0)) < 0) {
-            printf("Socket2 error!\n");
-        }
-        //create structure for host
-        struct hostent *hp;
-        struct sockaddr_in servaddr; 
-        
-        memset((char*)&servaddr,0,sizeof(servaddr));
-        servaddr.sin_family = AF_INET;
-        servaddr.sin_port = htons(myport);
-        
-        hp = gethostbyname(IP);
-        if(!hp){
-            printf("HOST NAME ERROR\n");
-        }
-        memcpy((void*)&servaddr.sin_addr, hp->h_addr_list[0], hp->h_length);
-
-        if(sendto(out, buf, MAX, 0, (struct sockaddr*)&servaddr, sizeof(servaddr)) < 0) {
-            printf("sendto error\n");
-        } 
-
+        printf("\nPORT %d is Waiting\n",myport);
         bzero(buf,MAX);
+        //LISTEN TO myport FOR A
+        recvlen = recvfrom(fd,buf,MAX,0,(struct sockaddr *)&remaddr,&addrlen);
+        printf("RECIEVED at PORT %d:\n'%s'\n",myport,buf);
+        //cull down length
+        char *b = buf;
+        int i = 0;
+        while (*b) {
+            i++; 
+            b++;
+        }
+        //SEND INFO TO IP (B)
+        printf("SENDING TO %s-%s\n",IP,outPort);
+        sendto(fd,buf,i,0,(struct sockaddr*)&servaddr, sizeof(servaddr));
+        //LISTEN FOR RESPONSE? (B)
+        bzero(buf,MAX);
+        recvfrom(fd,buf,MAX,0,(struct sockaddr*)&servaddr, &servlen); 
+        printf("RECIEVED from %s-%s:%s\n",IP,outPort,buf);
 
-        //listen for response
-        recvlen = recvfrom(out, buf, MAX,0,(struct sockaddr*)&servaddr, &addrlen);
-        printf("TEST: %s\n",buf);
+        b = buf;
+        i = 0;
+        while (*b) {
+            i++; 
+            b++;
+        }
+        //FWD RESPONSE TO (A)
+        sendto(fd,buf,i,0,(struct sockaddr *) &remaddr, addrlen);
     }
 }
 //Listens for incoming stuff
