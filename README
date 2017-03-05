@@ -1,24 +1,17 @@
-Relationship
-A: Client, knows Server B that it wishes to send and recieve data from
-B: Server, Accepts input and returns AKW
-C: VPN, has 5 concurrent threads, each 'connected' to a B. A knows which's Bs it wants to connect to
+Georges Brantley
 
-TODO: I CAN"T GET THE FUCKING RESPONSE TO WORK
-STEPS:
+mytunnel.c:
+Use: ./mytunnel vpnIP vpnPORT ServerIP serverPORT
 
-RUN A,B,C at once
+tunneld.c:
+Use: ./tunneld [port]
+(no port will make default = 8000)
 
-A tells C, I want to talk to this B at this port.
-C returns back a port on C 
-A talks to Port on C
-C forwards data to B
-B accepts data from C, returns AWK?
-C returns data to A
-
+Tunneld's vpn ports are 8010-8014.
 Up to 5 connections can be kept
+The VPN will state if there was an error in bind, will not shut down though to keep other VPNs up
 
-A ---- C ----- B
+PDF is attached in folder
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Data is not really being sent, just AKWs
-
+source for UDP sockets
 https://www.cs.rutgers.edu/~pxk/417/notes/sockets/udp.html
