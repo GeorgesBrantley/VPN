@@ -1,6 +1,6 @@
 #include <sys/socket.h>
 #include <string.h>
-#include <time.h>
+#include <sys/time.h>
 #include <sys/time.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -100,17 +100,26 @@ void *connectionListen(void* tunNum){
             sendto(fd,buf,i,0,(struct sockaddr*)&servaddr, sizeof(servaddr));
             //LISTEN FOR RESPONSE? (B)
             bzero(buf,MAX);
-            recvfrom(fd,buf,MAX,0,(struct sockaddr*)&servaddr, &servlen); 
-            printf("RECIEVED from %s-%s:%s\n",IP,outPort,buf);
+            //this sometimes hangs
+            struct timeval timeout={5,0};
+            setsockopt(fd,SOL_SOCKET,SO_RCVTIMEO,(char*)&timeout,sizeof(struct timeval));
 
-            b = buf;
-            i = 0;
-            while (*b) {
-                i++; 
-                b++;
-            }
-            //FWD RESPONSE TO (A)
-            sendto(fd,buf,i,0,(struct sockaddr *) &remaddr, addrlen);
+            int rec = recvfrom(fd,buf,MAX,0,(struct sockaddr*)&servaddr, &servlen); 
+            if (rec > 0) {
+                printf("RECIEVED from %s-%s:%s\n",IP,outPort,buf);
+
+                b = buf;
+                i = 0;
+                while (*b) {
+                    i++; 
+                    b++;
+                }
+                //FWD RESPONSE TO (A)
+                sendto(fd,buf,i,0,(struct sockaddr *) &remaddr, addrlen);
+           } else {
+                printf("Hanged! Skipping!\n");
+
+           }
         } else if (*b == 'L') {
             printf("TRAFFIC PROTOCOL\n");
             //SEND INFO TO IP (B)
@@ -181,7 +190,7 @@ int main (int argc, char *argv[]) {
     myaddr.sin_port = htons(port); 
     
     if (bind(fd, (struct sockaddr *)&myaddr, sizeof(myaddr)) < 0) { 
-        printf("bind failed"); 
+        printf("bind failed\n"); 
         return 0; 
     } 
 
@@ -213,7 +222,6 @@ int main (int argc, char *argv[]) {
             }
             ++w;
         }
-        printf("TEST2:%s, %s\n",targetIP,targetPort); //this works
         //Open up connection
         if (amountT >= N) {
             // SEND FULL
